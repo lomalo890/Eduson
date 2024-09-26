@@ -95,3 +95,63 @@ class Triangle:
         c = self.c
         p = (a + b + c)/2
         return ((p * (p - a) * (p - b) * (p - c))^0.5)
+    
+
+"""
+Создайте класс Vector, представляющий собой вектор в трехмерном пространстве. 
+В этом классе реализуйте несколько магических методов, таких как __init__, 
+__str__, __add__, __sub__ и __mul__.
+"""
+
+class Vector:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+    
+    def __str__(self):
+        return str(self.x, self.y, self.z)
+    
+    def __add__(self, other):
+        x1 = self.x
+        y1 = self.x
+        z1 = self.x
+        x2 = other.x
+        y2 = other.y
+        z2 = other.z
+
+        x = x1 + x2
+        y = y1 + y2
+        z = z1 + z2
+
+        vector = Vector(x, y, z)
+        return vector
+    
+    def __sub__(self, other):
+        x1 = self.x
+        y1 = self.x
+        z1 = self.x
+        x2 = other.x
+        y2 = other.y
+        z2 = other.z
+
+        x = x1 - x2
+        y = y1 - y2
+        z = z1 - z2
+
+        vector = Vector(x, y, z)
+        return vector
+    
+    def __mul__(self, integer):
+        x1 = self.x
+        y1 = self.x
+        z1 = self.x
+
+        x = x1 * integer
+        y = y1 * integer
+        z = z1 * integer
+
+        vector = Vector(x, y, z)
+        return vector
+    
+    
