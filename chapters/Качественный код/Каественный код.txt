@@ -1,3 +1,10 @@
 pycodestyle для выявления, но не исправления ошибок.
 black для исправления файла по пип8
 Кроме black можно использовать autopep8 --in-place --aggressive main.py
+
+poetry new chapters/'Качественный код'/poetry создаст структуру проекта
+poetry shell создаст виртуальное окружение в своей папке
+poetry add rich устанавливает пакет Rich это Python библиотека, позволяющая отображать красивый текст и форматировать терминал
+Чтобы вывести файл нужно cat <file>
+poetry build собирает наш проект 
+poetry publish <name_pack>
