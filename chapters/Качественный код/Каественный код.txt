@@ -105,7 +105,12 @@ from ...output import function1, function2 -- и так далее
 
 
 
+Как делать свои собственне исключения?
 
+class MyException:
+    def __init__(self, my_data, *args: object) -> None:
+        super().__init__(*args)
+        self.my_data = my_data
 
 
 
