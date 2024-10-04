@@ -41,7 +41,72 @@ sudo -i -u postgres и psql -- on linux
 
 Ссылка с командами: https://www.geeksforgeeks.org/postgresql-psql-commands/
 Пример простой базы данных: https://docs.yugabyte.com/preview/sample-data/northwind/
-5
+
+git branch --delete name_branch -- удалить ветку на удалённом репозитории
+Но нужно ещё удалить ветку локально -- git branch --delete name_branch
+
+
+
+
+
+
+
+
+
+
+
+
+Как подключится к БД на Python?
+
+import psycopg2
+
+HOST = host
+DATABASE - database
+USER = user
+PASSWORD = password
+
+connection = psycopg2.connect(
+    host...(смотреть константы)
+)
+
+cursor = connection.cursor()
+cursor.execute(query)
+connection.close()
+
+
+
+
+
+
+
+
+
+select pg_typeof(1) --> integer
+select pg_typeof(1::smallimt) --> smallint
+select 1.56543143::numeric(5, 3) --> пять цифр, после точки три. 1.565
+select 1.56543143::real --> 1.565431 до 6 цифр после запятой, а double presision до 15
+
+Удалить таблицу
+drop table if exists table_name;
+
+create table chars (
+    a char(5) -- length 5
+    b varchar(5) -- length 5 is not space
+);
+
+boll в SQL  не integer, но можно преобразовать
+select(1 = 1) = bool(1)
+
+select hg_typeof('2019-12-21') --> not his understant
+select hg_typeof('2019-12-21'::date) --> date
+select '2019-12-21'::timestampt --> '2019-12-21 00:00:00'
+select '2019-12-21'::date + interval '1 month 3 days' --> '2020-01-24'
+
+
+
+
+
+
 
 
 
