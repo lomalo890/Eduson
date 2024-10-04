@@ -41,7 +41,7 @@ sudo -i -u postgres и psql -- on linux
 
 Ссылка с командами: https://www.geeksforgeeks.org/postgresql-psql-commands/
 Пример простой базы данных: https://docs.yugabyte.com/preview/sample-data/northwind/
-
+5
 
 
 
