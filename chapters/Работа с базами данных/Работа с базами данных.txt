@@ -106,7 +106,44 @@ select '2019-12-21'::date + interval '1 month 3 days' --> '2020-01-24'
 
 
 
+    Для создания суперпользователя: CREATE USER name WITH PASSWORD 'pass' SUPERUSER. 2
+    Для создания обычного пользователя: CREATE USER name WITH PASSWORD 'pass'. 2
+    Для создания пользователя с дополнительными параметрами (например, лимит на число одновременных подключений к БД): CREATE USER name WITH PASSWORD 'pass' CONNECTION LIMIT 5. 2
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+Запросы
+
+select name, price * count from product p -- вывести циену остатка товара по каждй позиции.
+select name, (price * count) as cost from product p -- название столбца cost
+
+select price as p from goods where p > 20 and p < 40
+то же, что и
+select price as p from goods where p between 20 and 30 только они включены
+
+ОПератон and мы можем писать хоть сколько.
+
+select * from people where region is not null
+select * from people where age in (11, 22, 33) -- если возраст равен каким-то из этих
+
+select * from people where id_command in (select id from commands where salary > 1000000) -- вывести всех людей, которые состоят в команде с зарплатой в сумме больше миллиона
+select distinct работает и с составными уникальными значениями, которые в совокупности своей представляют это уникальное значение.
+
+Ещё сложней
+
+select * from product p where exist (select 1 from order where product_id=p.product_id and cost>50) -- вывести все продукты, на которые был заказ больше 50 рублей
+select * from people order by age desc -- отсортировать всех людей в порятке убывания, если поставить desc
 
 
 
