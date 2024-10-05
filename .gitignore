@@ -1,2 +1,2 @@
-/chapters
-/workbooks
+.gitignore
+.venv
