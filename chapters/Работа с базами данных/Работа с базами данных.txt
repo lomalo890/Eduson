@@ -144,9 +144,139 @@ select distinct работает и с составными уникальным
 
 select * from product p where exist (select 1 from order where product_id=p.product_id and cost>50) -- вывести все продукты, на которые был заказ больше 50 рублей
 select * from people order by age desc -- отсортировать всех людей в порятке убывания, если поставить desc
+select * from people order by age, salary -- сначала отсортируется по возрасту, а затем по зарплате, то есть сначала покажется:
+1 2000
+1 3000
+1 10 000
+2 4 000
+2 5000
+3 9 000
+3 23 000
+
+В where мы не можем использовать алиасы
+
+select * from people where name like 'D_ %' -- найти всех людей с именем из двух букв и на букуву D, а после второй буквф(_) пробел
+
+select 'lol' ilike 'Lol' --> True (ilike)
 
 
 
+
+
+select * from people where name similar to '(D|B)_{10,}' -- найти все имена Д или Б и после которых есть 10 символом
+
+https://postgrespro.ru/docs/postgresql/9.5/functions-matching регулярки для sql
+https://postgrespro.ru/docs/postgrespro/10/functions-formatting работа со временем
+
+
+select *,
+    case 
+    when age > 60 'old'
+    when age > 14 'v'         разделяет по группам возрастную категорию
+    else 'small
+    end age_group
+from people
+
+
+Coalesce
+nullif
+
+select *,
+    case
+    when fax is not null then fax
+    when phone is not null then phone
+    else null
+    end contact
+from people
+
+Долго писать. Не лучше ли воспользоваться другим?
+
+select *, coalesce(fax, phone) as contact from people
+
+select name, nullif(animal, 0) from people 
+
+
+
+
+
+
+
+
++--------+----------------+----------------+----------------+
+|   id   |   order_date   |  payment_date  |  shipped_date  |
++--------+----------------+----------------+----------------+
+|   1    |   2024-01-01   |      NULL      |      NULL      |
+|   2    |   2024-01-01   |   2024-01-02   |      NULL      |
+|   3    |   2024-01-02   |   2024-01-02   |   2024-01-04   |
+|   4    |   2024-01-02   |   2024-01-05   |      NULL      |
+|   5    |   2024-01-03   |   2024-01-03   |   2024-03-05   |
+|                            ...                            |
++--------+----------------+----------------+----------------+
+
+SELECT id, COALESCE(shipped_date, payment_date, order_date) AS last_date FROM orders; --> формирует три с ячейками, у которых не нол
+
++--------+--------------+
+|   ID   |  last_date   | 
++--------+--------------+
+|   1    |  2024-01-01  |
+|   2    |  2024-01-02  |
+|   3    |  2024-01-04  |
+|   4    |  2024-01-05  |
+|   5    |  2024-01-05  | 
+|           ...         |
++--------+--------------+
+
+
+
+
+
+
+select pg_typeof(1) --> integer
+select pg_typeof(cast(1 as numeric)) --> numeric
+selectpg_typeof('asdfghjkl'::char(100)) --> character
+selectpg_typeof('asdfghjkl') --> varcharacter
+
+x = 2
+y = 5
+select y/x --> 2
+select y*1.0/x --> 2.5
+
+
+select 'Hello! ' || 'How are you?' as text--> Hello! How are you? в стобце text
+select concat('Hello! ', 'How are you?') as text
+select concat_ws('Cow ', 'Hello! ', 'How are you?') --> Hello! Cow How are you?, то есть в concat_ws первым идёт разделитель.
+select length('1234 5678') --> 8
+select lower('vfvf'), upper('vfvf'), initcap('vfvf ghgh') --> vfvf, VFVF, Vfvf Gfgf
+select position('a' in 'htfasd') --> 4
+select substring("My name is George' from 1 for 4) --> My n
+select substring("My name is George' from '....$') --> взять последние 4 элемента конца строки
+select trim('    asdf   ') --> 'asdf'
+select trim(both ' xyz' from' xy   asdf   z')
+leading -- только чтоб слева убралось вместо both
+trailing -- только чтоб справа убралось вместо both
+left
+right
+
+
+
+
+
+
+
+
+Даты
+
+now()
+переменная current_date
+переменная current_time
+extract(year from data)
+extract(month from data)
+extract(day from data)
+make_date(2001, 12, 12) --> 2001-12-12 + interval '3 days 5 hours 31 minuts 2 seconds' --> другая дата ровно чрез это время.
+Сложения дат и вычитания дат происходит просто
+select to_date('10 Apr 2021', 'DD Mon YYYY') --> 2021-04-10
+select to_timestemp('10 Apr 2021 21 34 56', 'DD Mon YYYY HH24 MI SS') --> просто добавится время.
+select to_char(make_date(2021, 12, 04), 'DD.MM.YYYY')
 
 
 
