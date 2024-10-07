@@ -646,6 +646,169 @@ order by c.fio
 
 
 
+Оконные функции
+
+with old as (
+    select days from people -- сформировали таблицу
+)
+
+select * from a
+
+with a as (select user_id, count(*) as cnt from userentry u group by user_id)
+select * from a where cnt = (select max(cnt) from a) -- вывести максимальное значение с остальными значениями строки.
+
+А можно вот так:
+
+with a as (
+    select user_id, count(*) as cnt 
+    from userentry u 
+    group by user_id
+)
+select * from a order by cnt desc limit 1 -- лимит возвращает из отсортированного списка первый элемент (максимальный)
+
+А если мы хотим получить второй элемент?
+select * from a order by cnt desc offset 1 (скипаем один) limit 1
+
+А если у нас несколько пользователей с одинаковым максимальным значением?
+
+with a as (select user_id, count(*) as cnt from userentry u group by user_id)
+with b as (select cnt from a order by cnt desk limit 1)
+select * from a where cnt = (select cnt from b)
+
+Ну хорошо. А нам нужно это всё проранжировать:
+with a as (
+    select user_id, count(*) as cnt 
+    from userentry u 
+    group by user_id
+)
+with b as (
+    select user_id, cnt, rank() over(order by cnt desc) <ранжируем после сортировки> as rnk from a
+)
+
+А теперь что? Теперь нам нужно вывести всех людей с максимальным значением, если их несколько
+select user_id, cnt from b where rnk = 1
+
+Но функция rank может номеровать 1 2 2 4, потому что за место 3 идёт 2. Чтобы такого не было, лучше использовать dense_rank()
+
+
+
+
+
+
+
+
+
+
+
+Монотонно неубывающие периоды
+
+То есть вывод значений в определённом интервале
+
+with a as (
+	select to_char(entry_at, 'MM-DD') as dt, 
+	count(user_id) as cnt
+	from userentry u 
+	where to_char(entry_at, 'YYYY') = '2022'
+	group by dt
+)
+select * from a
+
+Вот в году количество в день для одного пользователя.
+
+ХОрошо, а если мы хотим посмотреть динамику роста столов за предыдущие два дня, сегодняшнюю и потенциальную динамику роста за следующие два дня?
+
+dinamycs as (
+    select
+        date, (сегодня)
+        lag(quantity, 2) over(order by date) as lg2,
+        lag(quantity) over(order by date) as lg,
+        quantity,
+        lead(quantity) over(order by date) as ld,
+        lead(quantity, 2) over(order by date) as ld2,
+    from tables
+)
+
+Но, чёрт возьми, нам же нужно узнать в какие пять дней был рост, верно? Этосделать можно с помощью where. Даже не буду писать
+
+
+
+
+
+
+
+
+Скользящее среднее
+
+Теперь нам нужно найти среднее 4 дней после даты
+
+dinamycs as (
+    select
+        date, (сегодня)
+        quantity,
+        lead(quantity) over(order by date) as ld,
+        lead(quantity, 2) over(order by date) as ld2,
+        lead(quantity, 3) over(order by date) as ld3,
+        lead(quantity, 4) over(order by date) as ld4,
+        (quantity + ld + ld2 + ld3 + ld4)/5.0
+    from tables
+)
+
+Заколебёшься потом добавлять. А если нужно среднее значение за следующие 100 дней? Короче, тут на помощб приходит rows between, по умолчанию которого идёт unbounded preceding, что значит "возьме все до". А нам нужно ОТ:
+
+with dinamycs as (
+    select
+        date, (сегодня)
+        quantity,
+        avg(quantity) over(order by date rows between current row and 4 following)
+    from tables
+)
+
+order by date rows between current row and 4 following - сортируем по дате строки между текущим значением и 4 следующими
+
+Теперь хочется узнать названия всех полей таблицы:
+select * from information_schema.columns
+
+Вообще-то он куча информации даёт
+Это назвается исследовательский анализ данных
+
+Сколько у нас людей имеют детей?
+select count(*) from people where childrens is not null
+
+А сколько нет? Нужно вывести их имена.
+select name from people where childrens is null
+
+
+Давайте пример обсудим:
+
+select
+    name,
+    surname,
+    coalesce(father_name, 'No father') -- если значение налл, то пишем второй аргумент
+    to_char(birthday, 'DD-MM')
+    extract(year from birthday)
+froom people
+
+
+
+ARPU и LTV, или Lifetime value, — одни из наиболее важных показателей для измерения эффективности бизнеса, при этом их часто путают. ARPU отображает средний доход от покупателя за выбранный отрезок времени, а LTV — валовую прибыль, которую приносит покупатель за всё время взаимодействия с бизнесом.
+
+Monthly Recurring Revenue переводится как «регулярный ежемесячный доход». Это одна из главных метрик для проектов, которые используют модель подписки, например, на готовое программное обеспечение. Так как клиенты повторяют оплату ежемесячно, показатель MRR относительно стабилен.
+
+Как рассчитать MRR? Рассчитать MRR просто. Просто умножьте количество ежемесячных подписчиков на средний доход на пользователя (ARPU). MRR = Количество подписчиков по ежемесячному плану * ARPU .
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
