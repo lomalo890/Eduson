@@ -861,6 +861,8 @@ group by date2
 
 
 
+
+
 Как использовать подзапросы в фильтрации строк?
 
 Захотим получить цену выше среднего значения:
@@ -868,6 +870,87 @@ select * from products where price > (select avg(price) from products)
 
 хотим узнать какие продукты вывозила логистическая компания под номенром 1
 select * from order_details od where product_id in (select product_id from products where suppliers_id = 1)
+Это не связанные подзапросы.
+А есть связанные! Коррелируемые.
+
+select * from order_details od where od.employee = 'Ivan' and exists(select * from products where product_id = 3)
+
+Можно ещё писать коррелируемые подзапросы в select
+select price, quantity, (select name from product p where od.product_id = p.product_id) from order_details
+
+У fromа можно.
+
+Есть такая функция date_trunc('year', '2023, 07, 30'). Она выведет 2023, 01, 01, 00:00:00
+
+select max(date_trunc('year', '2023-08-01')) - min(date_trunc('year', '2025-07-21')) посчитает количество дней между годами
+Можем выести количество сотрудников, которые проработали больше 640 дней
+select employee from employees having (getdate() - date) > '640 days'
+
+
+-- какой сотрудник сколько времени работает
+-- date_trunc берет начальное состояние
+--считаем максимальную, минимальную  дату
+select max(date_trunc('month', o.order_date)) - min(date_trunc('month', o.order_date)) as dt, e.last_name || ' ' || e.first_name as name 
+from orders o
+join employees e 
+on o.employee_id = e.employee_id
+group by e.last_name || ' ' || e.first_name
+-- только те сотрудники, между первым и последним заказом которых прошло более 640 дней
+having max(date_trunc('month', o.order_date)) - min(date_trunc('month', o.order_date)) > interval '640 days'
+
+
+-- как переписать запрос с помощью подзапросов
+-- 3. Вычислим значение в агрегированных данных
+select name, mx-mn as diff
+from (
+-- 2. Сгруппируем таблицу по сотрудникам
+    select name, max(dt) as mx, min(dt) as mn
+    from (
+-- 1. Cформуруем таблицу, где будет дата и время
+        select date_trunc('month', o.order_date) as dt, e.last_name || ' ' || e.first_name as name 
+        from orders o
+        join employees e 
+        on o.employee_id = e.employee_id
+        ) t
+    group by name ) t2
+where mx-mn > interval '640 days'
+
+
+union собирает всех
+
+select user from run -- пользователи, которые запускали код, а есть юзеры, которые не запускали код, но проверяли сразу же
+union
+select user from check -- пользователи, которые сразу проверяли код, а есть юзеры, которые сразу отпраляли код.
+union
+select user from send
+
+То есть выводит всех юзеров, а если нам надо посмотреть сколько чего каждый делал, то:
+
+select user from run
+union all
+select user from check
+union all
+select user from send
+
+То есть он выведет все строки
+
+А если мы хотим вывести всех пользователей, которые и запускали, и проверяли, и отправляли?
+
+select user from run
+intersect
+select user from check
+intersect
+select user from send
+
+В мускуле этого оператора нет
+
+Ещё есть эксепт, который проверяет наличие поля в другой таблице
+
+select user from run
+except
+select user from check
+
+
 
 
 
