@@ -799,6 +799,75 @@ Monthly Recurring Revenue переводится как «регулярный �
 
 
 
+Задача превращения длинной таблицы в широкую
+
+Таблица:
+
+name   key   value
+
+Иванов ФИО   Иванов Иван Иванович
+Иванов email ivan@ya.ru
+Иванов Phone +7 (888) 888 88 88
+Петров ФИО   Петров Пётр Петрович
+Петров email petr@ya.ru
+Петров Phone +7 (999) 999 99 99
+
+Как сделать широкую?
+
+select 
+    name,
+    max(case key = 'ФИО' then value end) as name,
+    max(case key = 'email' then value end) as mail,
+    max(case key = 'phone' then value end) as pnone,
+from people
+order by name
+
+name                 mail       phone
+Иванов Иван Иванович ivan@ya.ru +7 (888) 888 88 88
+Петров Пётр Петрович petr@ya.ru +7 (999) 999 99 99
+
+
+SELECT employee, COUNT(DISTINCT doc_id) AS amount
+FROM transactions
+GROUP BY employee
+HAVING COUNT(DISTINCT doc_id) > 10
+ORDER BY amount DESC
+
+Where не поддкрживает агрегатные функции
+
+
+select employee, sum(sum)as summ
+from transactions
+where type = 1
+group by employee
+order by summ
+limit 1
+Вывести человека с минимальной суммой  накоплений в чеках
+
+select to_char(date, 'DD-MM') as date2, 
+count(distinct doc_id) as amount
+from transactions
+where to_char(date, 'YYYY-MM-DD') 
+between '2023-05-17' and '2023-05-19'
+group by date2
+Количество цеков впериоде
+
+
+
+
+
+
+
+
+
+
+Как использовать подзапросы в фильтрации строк?
+
+Захотим получить цену выше среднего значения:
+select * from products where price > (select avg(price) from products)
+
+хотим узнать какие продукты вывозила логистическая компания под номенром 1
+select * from order_details od where product_id in (select product_id from products where suppliers_id = 1)
 
 
 
