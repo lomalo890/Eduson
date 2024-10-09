@@ -165,7 +165,7 @@ echo 'Hello' > text2.txt -- прописать в файл text2.txt
 grep Goog text1.txt -- найти все слова с буквами Goog
 find . -name text2.txt -- найти этот файл
 find . -name *.txt -- найти файл с таким расширением
-find . -name *.txt -type f --распечатай нам файлы и файлы в папках с расширением
+find . -name *.txt -type f --распечатай нам файлы и файлы в папках с расширение
 
 
 
