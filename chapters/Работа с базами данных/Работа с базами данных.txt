@@ -1178,6 +1178,160 @@ from transactions order by employee desc, rnk
 
 
 
+Есть методы для манипулироваания данных (select и всё такое)
+Есть методы языка определения данных (create, drop, alter, truncate(очистит))
+
+create table if not exists demo (
+    id serial primary key,
+    name varchar(30) not null default 'name',
+    date date check (date > '1900.01.01'),
+    count numeric unique, -- то же самое, что и constraint count unique(conut) в конце
+    constaint valid check(count > 0) -- проверяем в конце процесса
+)
+
+drop table if exists demo
+insert into demo(id, name, date, count) values(1, 'George', '1993-01-01', 45)
+insert into demo values(1, 'George', '1993-01-01', 45) -- то же самое
+
+truncate table demo -- очищает всю таблицу
+
+insert into demo values
+(1, 'George', '1993-01-01', 45)
+(1, 'George', '1993-01-01', 45)
+(1, 'George', '1993-01-01', 45)
+(1, 'George', '1993-01-01', 45) -- вставятся все
+
+Чтобы сделать фореднкей ключ
+
+create table if not exists demo1 (
+    id serial primary key
+)
+
+create table if not exists demo2 (
+    id serial primary key
+    d_id serial,
+    constaint fk_demo
+    foreing key (d_id)
+    references demo1(id)
+    on delete set null --при удалении в связанной таблице значениепереписывается на нал
+    on update cascade -- при обновлении связанной строки другой таблицы, обновляться будет и значение в этой таблице.
+)
+
+delete from demo1 where id = 3
+update demo1 set id = 100 where id = 3
+дроп и транкейт -- это ддл
+делете -- это дмл
+create table a as select * from demo2 where id > 1
+create table a as select * from demo2 where 1 = 0 -- создаст таблицу со структурой, но без данных
+insert into demo3 select * from demo2 --вставьте туда всё
+
+А если мы хотим посмотреть все строки, которые вставились?
+insert into demo 3 select * from demo2 returning *
+
+alter table demo alter column id type serial -- измеяет тип id таблицы demo с int  на serial
+                              name drop defaut -- удаляет значение по умолчанию
+                 rename id to id_d -- переименовывем столбцы
+alter table demo2 rename demo 3 -- переименовываем таблицу
+alter table demo2 add constraint fk_demo foreing key (d_id) references demo1(id) on delete set null on update cascade -- добавляет форкей
+
+
+
+
+
+Хотим сохранить базу данных как txt- файл?
+В терминале: pg_dump -U username name_db > <путь до папки>
+
+Power BI -- управление БД с UI
+
+
+
+
+
+
+
+Как подключится к БД в Python?
+
+orm -- абстрагирование от SQL, работа с базой с помощью команд. В питоне всё это сложно.
+Есть библиотеки коннекторы
+
+from psycopg2 import connect
+
+HOST
+PORT
+DATABASE
+USER
+PASSWORD
+
+connection = connect(
+    host = HOST
+    port = PORT
+    database = DATABASE
+    user = USER
+    password = PASSWORD
+)
+
+cursor = connection.cursor()
+quary = "select * from tb"
+exec = cursor.execute(quary) -- не вернёт ничего. 
+res = cursor.fetchall() -- сохранит в переменнцю в формате массива из кортежей все данные из таблицы. То есть он ссылается на exec и берёт оттуда все значения
+cursor.fetchone() --  будет возвращать по одной строке. То есть сначала первую, потом вторую и так далее.
+
+Крсор сам массив, но мы его не выведем. В цикле можно добавлять каждый элемент.
+
+Если мы хотим получить всех людей 30-ти лет:
+
+query = """select * from peoples where age = %s""" --%s - люое строковое значение.
+cursor.execute(query, (5, ))
+
+Найти количество заказов по уникальному индексу
+
+query = '''select distinct order_id from orders'''
+cursor.execute(query)
+res = cursor.fetchall()
+
+query = '''select distinct from peoples where age = %s'''
+
+for row in res:
+    order_id = row[0]
+    cursor.execute(query, (order_id, ))
+    orders = cursor.fetchall()
+    print(f'id {order_id}: {len(orders)})
+
+Мы хотим проверить правильность подстановки переменных:
+cursor.mogrify(query, (order_id, ))
+
+Вставляем данные, но insert не вставится в БД без коммита
+connection.commit()
+
+Но если нам лом писать каждый раз коммит, то есть автокоммит, который по умлчанию фалзе. Изменим
+connection.autocommit = True
+Вуаля! Теперь нам не надо писать писать каждый раз конструкцию connection.commit()
+
+Нам же не надо создава 1000 подключений для 1000 пользователей? Не лучше ли создаьть синглтон?
+
+class Database:
+  def __new__(cls, *args, **kwargs):
+    if not hasattr(cls, 'instance'):
+      cls.instance = super().__new__(cls)
+    return cls.instance
+
+  def __init__(self, host, port, database, user, password, autocommit=False):
+    self.connection = psycopg2.connect(
+        host=host,
+        port=port,
+        database=database,
+        user=user,
+        password=password,
+    )
+    self.connection.autocommit = autocommit
+    self.cursor = self.connection.cursor((cursor_factory=RealDictCursor))
+
+
+А если мыхотим узнать названия столбцов каждого значения? Тогда из модуля psycopg2 импортим ещё RealDictCursor и пишем значение, как в строке 1327
+
+
+update products set price -= 10 where product = 1 -- меняет цену у первого товара
+rollback -- откатить изменения
 
 
 
