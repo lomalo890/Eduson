@@ -1262,7 +1262,7 @@ DATABASE
 USER
 PASSWORD
 
-connection = connect(
+connection = sqlite.connect(
     host = HOST
     port = PORT
     database = DATABASE

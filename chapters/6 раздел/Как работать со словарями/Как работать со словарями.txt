@@ -47,5 +47,4 @@ d | d2
 Удаление элементов
 d.pop(100) - key
 d.popitem() - remove last
-del d1[1] - key
-
+del d1[1]
