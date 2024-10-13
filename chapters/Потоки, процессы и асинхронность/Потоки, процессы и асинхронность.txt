@@ -87,7 +87,7 @@ with ThreadPoolExecutor() as executor:
 
 Вот есть список из 8-х элементов и есть процессор на 4 ядра. Если тред использует потоки в ядрах, то ProcessPoolExecutor говорит, сколько ядер задействовать. ОС само решит сколько потоков нужно.
 
-integers = [2, 3, 4, 5, 6, 7, 8, 9]
+integers = [2, 3, 4, 5]
 
 def plus_one(integer):
     return integer + 1
@@ -119,6 +119,63 @@ diff = monotonic() - start
 Давай запускать в процессы те части кода, в которых мы уверены.
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+Асинхронность
+
+
+async def plus_one():
+    x = await 1 + 1
+    y = await 2 + 2
+    z = await 3 + 3
+    return x + y + z
+
+Асинхроннаяя функция, то есть предназначена для выполнения в потоках, в данным случае трёх. То есть мы говорим: один из трёх потоков может складывать 1 + 1, а я пока дальше пойду.
+
+
+По другому:
+
+async def foo():
+    asyncio.gather(1 + 1, 2 + 2, 3 + 3)
+
+Можно успыпить поток: asyncio.sleep(.3)
+
+
+
+Напишем пример:
+
+async def one():
+    await asyncio.sleep(.1) #await означает: никтоне хочет выполнится на это время?
+    return 1
+
+async def two():
+    await asyncio.sleep(.2)
+    return 2
+
+async def three():
+    await asyncio.sleep(.3)
+    return 3
+
+async all():
+    tasks = [three(), one(), two()] # заметь, как мы расставили
+    for task in asyncio.as_completed(tasks):
+        result = await task # сначала one, потому что первым выполнится, и так далее. Это всё из-за as_completed
+        print(result)
+
+
+Чтобы распаралелить эти функции:
+asyncio.gather(one(). two(), three())
 
 
 
