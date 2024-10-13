@@ -179,6 +179,36 @@ asyncio.gather(one(). two(), three())
 
 
 
+import threading
+
+t1 = Thread(target=plus_one, arga=1)
+t2 = Thread(target=plus_one, arga=1)
+t1.start()
+t2.start()
+t1.join()
+t2.join()
+
+Выполнится не как одна команда. Он ждёт, пока 1 поток завершится. Всё равно будет 2 секунды. Но можно использовать мультипроцессор
+
+p1 = Process(target=plus_one, args=3)
+p2 = Process(target=plus_one, args=4)
+
+p1.start()
+p2.start()
+
+p1.join()
+p2.join()
+
+Вуаля! Теперь за 1 секунду выполнится, потому что не ждёт.
+
+
+
+
+
+
+
+
+
 
 
 
