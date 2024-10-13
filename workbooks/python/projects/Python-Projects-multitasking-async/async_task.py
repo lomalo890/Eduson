@@ -29,14 +29,14 @@ async def main():
 
 # Моё решение
 async def main():
-    tasks = [parse_request(f'Request {i}') for i in range(1000)]
+    tasks = [parse_request(f'Request {i}') for i in range(7000)]
     results = await asyncio.gather(*tasks)
     process_tasks = [process_data(data) for data in results]
-    await asyncio.gather(*process_tasks) # 2.5
+    await asyncio.gather(*process_tasks) # 2.5  
 
 
 #solution proffi
-async def main():
+'''async def main():
     tasks = [asyncio.create_task(parse_request(f'Request {i}')) for i in range(1000)]
     processing_tasks = []
 
@@ -45,7 +45,7 @@ async def main():
         processing_task = asyncio.create_task(process_data(data))
         processing_tasks.append(processing_task)
 
-    await asyncio.gather(*processing_tasks) #1.96
+    await asyncio.gather(*processing_tasks) #1.96'''
 
 
 
