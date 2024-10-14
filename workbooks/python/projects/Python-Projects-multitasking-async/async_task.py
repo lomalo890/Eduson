@@ -3,6 +3,7 @@
 """
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from time import monotonic
 import random
 
@@ -26,14 +27,26 @@ async def main():
         data = await parse_request(request)
         await process_data(data)
 '''
-
+'''
 # Моё решение
 async def main():
     tasks = [parse_request(f'Request {i}') for i in range(7000)]
     results = await asyncio.gather(*tasks)
     process_tasks = [process_data(data) for data in results]
     await asyncio.gather(*process_tasks) # 2.5  
+'''
 
+#solution with threads
+async def main():
+    requests = [f'Request {i}' for i in range(1000)]
+    start = monotonic()
+
+    with ThreadPoolExecutor() as executor:
+        datas =     executor.map(parse_request, requests)
+        '''for data in datas:
+            process_data(data) #долго'''
+        executor.map(process_data, datas)
+    
 
 #solution proffi
 '''async def main():
