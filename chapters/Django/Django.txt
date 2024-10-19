@@ -391,6 +391,178 @@ urlpatterns = [
 
 Как работать с моделями?
 
+Теперь во views.py приложения homepage добавим
+
+from django.views.generic import ListView
+
+# Create your models here.
+
+class HomeView(ListView):
+    template_name = 'homepage.html'
+    model = Show то есть в запросе будет список шоу. ЗАметь, что мы наследовали от ListView
+
+Так, теперь нам нужно отобразить список в шаблоне:
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Театр N</title>
+    </head>
+    <body>
+        {% if request.user.is_authenticated %}
+            Добро пожаловать, {{ request.user.username }}!
+        {% else %}
+            Добро пожаловать!
+        {% endif %} <br>
+        <table> !!!!!!!!!!!!!!!!!!!!ОБРАТИТЕ ВНИМЕНИЕ!!!!!!!!!!!!!!!!!!!!!
+            {% for show in show_list %} по умолчанию django создаст имя класса_лист
+                <tr>{{ show.play.title }} - {{ show.start_at }}</tr> ну и здесь мы их всех выводим
+            {% endfor %}
+        </table>
+    </body>
+</html>
+
+Но мы не можем посмотреть ничего подробней этого
+Что делать? Сделаем ссылку на постановку. Для этого сделаем вью для приложения plays, потому что приложение homework напрямую не относится к представлениям, с импортом деталей вида из дженерика джанго
+
+from django.shortcuts import render
+from django.views.generic import DetailView
+
+# Create your views here.
+
+class ShowDetailView(DetailView):
+    model = Show
+
+Теперь сделаем файл урлов для игр, чтобы джанго мог читать и оттуда
+
+from django.urls import path
+from plays.views import ShowDetailView
+
+urlpatterns = [
+    path("<int:pk>/", ShowDetailView.as_view()) слэш обязательно
+]
+
+Может-то он может, но не знает как до этих урлов добраться. Потому напишем в урлах кора 
+
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('', include('homepage.urls')),
+    path("shows/", include('plays.urls'))
+    path('admin/', admin.site.urls),
+]
+
+Теперь нам нужно это отобразить в шаблоне, а шаблона не существует. Давайте добавим в templates идректорию plays:
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Постановка {{ object.play.title }}</object></title>
+    </head>
+    <body>
+        <p>{{ object.play.title }}</p>
+        <p>Постановка в {{ object.start_at }}</p>
+    </body>
+</html>
+
+Хоршо, теперь мы из homepage хотим по ссылке перейти. Как это сделать?
+
+Пропишем в моделях игр такую функцию:
+
+def get_absolute_url(self):
+    А-та-та А что мы тут делаем? неужто это всё самому автоматизировать?
+
+С from django.urls import reverse есть возможность не тупо прописывать все урлы явно для каждый позиции БД, а автоматизировать этот процесс.
+Для того, чтобы это использовать, нужно в игровых урлах пк для отображения информации завести name, то есть добавить этот именованный атрибут
+
+urlpatterns = [
+    path("<int:pk>/", ShowDetailView.as_view(), name="show_detail") имя show_detail
+]
+
+Теперь можем использовать reverse
+
+class Show(models.Model):
+    start_at = models.DateTimeField()
+    play = models.ForeignKey(Play, on_delete=models.CASCADE)
+    actors = models.ManyToManyField(Actor) # много показов могут ссылаться на одного актёра
+
+    @display
+    def play_name(self):
+        return self.play.title
+    
+    def get_absolute_url(self):
+        return reverse("show_detail", kwargs={"pk": self.pk})
+
+И нам осталось сделать ссылку на это:
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Театр N</title>
+    </head>
+    <body>
+        {% if request.user.is_authenticated %}
+            Добро пожаловать, {{ request.user.username }}!
+        {% else %}
+            Добро пожаловать!
+        {% endif %} <br>
+        <table>
+            {% for show in show_list %}
+                !!!!!!!!!!!!!!!!!!!ОБЯЗАТЕЛЬНО ПОСМОТРИТЕ!!!!!!!!!!!!!
+                <tr><a href="{{ show.get_absolute_url }}">{{ show.play.title }}</a> - {{ show.start_at }}</tr> 
+            {% endfor %}
+        </table>
+    </body>
+</html>
+
+Это сделано.
+
+А теперь мы хотим посмотреть все постановки, которые будут.
+Для этого в моделях игр создадим менеджера.
+
+from django.db.models import functions
+
+class ShowManager(models.Manager):
+    def active(self):
+        return self.get_queryset().filter(start_at__gt=functions.Now())
+
+Что это за from django.db.models import functions? Это пакет функций для работы с БД. В данном случае мы фильтруем значения, которые больше сегодняшнего дня.
+Теперь мы должны
+
+Теперьпереопределим объект для нашей модели Show, чтобы шоу знало, что ей управляет менеджер
+
+class Show(models.Model):
+    start_at = models.DateTimeField()
+    play = models.ForeignKey(Play, on_delete=models.CASCADE)
+    actors = models.ManyToManyField(Actor) # много показов могут ссылаться на одного актёра
+    objects = ShowManager()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!ВНИМАНИЕ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    @display
+    def play_name(self):
+        return self.play.title
+    
+    def get_absolute_url(self):
+        return reverse("show_detail", kwargs={"pk": self.pk})
+
+
+Дальше переопределим метод get_queryset для HomeView в домашней странице, чтобы он отображал только актуальные даты.
+
+class HomeView(ListView):
+    template_name = 'homepage.html'
+    model = Show
+
+    def get_queryset(self):
+        return Show.objects.active()
+
+
+
 
 
 
