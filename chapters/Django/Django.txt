@@ -1,0 +1,408 @@
+django-admin startproject core . -- создать проект core в текущей папке
+pip freeze > requirments.txt -- создаст файл с версиям библиотек
+asgi.py (асинхронная) и wsgi.py (синхронная) служат прокладками между проектом и веб-приложением.
+BASE_DIR в settings.py находит файл запуска проекта.
+BASE_DIR = Path(__file__).resolve().parent.parent -- то есть к файловой бабушке обращаемся
+SECRET_KEY = 'django-insecure-&m5s2n+4&6sphг_z)t6z5=d=jt1av*qj4aikqp5($^unh95#js' -- ключ для хеширования данных
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True -- когда деплоишь в продакшн, лучше дебаг сфолзить, потому что если включишь, то плохой человек может украсть данные
+
+ALLOWED_HOSTS = [] -- здесь мы будем прописывать все хосты, по которым можно подключаться к базе данных.
+В константной переменной INSTALLED_APPS прописаны предустановленные пакеты и библиотеки в django для работы с ним.
+
+MIDDLEWAREм является посредником между пользователем и сервером, то есть он обрабатывает сообщения пользователей.
+
+ROOT_URLCONF = 'core.urls' ссылается на файл урлов в проекте.
+
+AUTH_PASSWORD_VALIDATORS из классов берёт валидаторы паролей для паролей, указанных пользователем при регистрации.
+
+python3 manage.py runserver -- запуск проекта.
+
+Не надо пренебрегать созданием папки пользователей, ибо она делает групповую политику. 
+Создать: python3 manage.py startapp users
+
+Теперь нужно создать модель user в models.py
+
+from django.contrib.auth.models import AbstractUser
+
+# Create your models here.
+class User(AbstractUser):
+    pass
+
+Дальше нужно сделать в admin.py это:
+
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from users.models import User
+
+# Register your models here.
+admin.site.register(User, UserAdmin)
+
+Теперь надо сказать dj, что у нас есть юзеры. Для этого в переменную INSTALLED_APPS в сеттингсах добавим users
+
+INSTALLED_APPS = [
+    'users',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+] установленные для удобства работы
+
+
+Всё? Не...
+
+Нам же нужно ещё сказать дж, что это будет пользователем по дефолту, верно? То есть при аутентификации он будет регистрировать пользователей под этой ролью.
+Обязательно комментируем!
+# Authentification settings
+AUTH_USER_MODEL = 'users.User'
+
+А где модель? Нам не надо, ведь __init__.py есть.
+
+Нам нужно сделать миграцию в базу данных, чтобы создалась таблица юзеров
+
+python3 manage.py makemigrations
+
+users/migrations/0001_initial.py
+
+Что за хрень? Какого хера он так назвался? Нет уж, лучше добавить флаг -n в предыдущую команду, а эту залупу удалить.
+
+python3 manage.py makemigrations -n create_user_model
+
+users/migrations/0001_create_user_model.py
+
+Другое дело! Теперь готово для миграции в базу данных!
+
+python3 manage.py migrate
+
+Запустим
+
+Чтобы отключить порт, сделай
+
+lsof -i :8000 -- найди процесс с прослушкой прота
+kill -9 <PID> -- убей процесс
+
+Хм, по урлу http://127.0.0.1:8000/ ничего не проиходит. А ты добавь /admin/ и будет тебе счастье!
+
+
+Хух, теперь надо в админский храм зайти. Но админ-то не создан! Надо сделать:
+В консоле:
+python3 manage.py createsuperuser
+
+name admin
+mail admin@admin.com (на самом деле его может и не существовать в принципе этого мейла.)
+password admin123
+
+
+
+
+
+Чтобы изменить интерфейс администратора, нужно установить django-admin-interface и добавить "admin_interface", "colorfield", в переменную INSTALLED_APPS до 'django.contrib.admin',
+
+Дальше нужно сделать статичную папку с файлами
+
+Для этого добавляем в сеттингсы STATIC_ROOT='static/' и выполняем команду python manage.py collectstatic --clear
+
+Вуаля! Всё изменилось!
+
+
+
+Теперь добавим модели в наш проект, чтобы он автоматически создались в БД.
+
+from django.db import models
+
+# Create your models here.
+class Play(models.Model):
+    title = models.CharField(max_length=255)
+    annotations = models.TextField()
+    pass
+
+Также, как и с юзерами, нужно добавить этот пакет в настройки
+
+INSTALLED_APPS = [
+    'users',
+    'plays',
+    "admin_interface",
+    "colorfield",
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+
+Подтвердим сделанное 
+
+python3 manage.py makemigrations <name_table> -n create_play_model
+
+Давайте разберём миграцию
+class Migration(migrations.Migration):
+
+    initial = True значит, что это первая миграция, инициализирующая
+
+    dependencies = [] тут будут зависимости от других миграций
+
+    operations = [
+        migrations.CreateModel(
+            name='Play', создаём модель с такими параметрами и полями. Заметьте, что id идёт по умолчанию
+            fields=[
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
+                    ),
+                ),
+                ('title', models.CharField(max_length=255)),
+                ('annotations', models.TextField()),
+            ],
+        ),
+    ]
+
+Ну, давайте применим миграцию
+
+python3 manage.py migrate
+
+Если мы в браузере перейдём в храм, то мы там добавленную нами модель игр не увидим. Для этого нужно зарегистрировать игры в храме
+
+Перейдём к админу в плейсах
+
+from django.contrib import admin
+from plays.models import Play
+
+# Register your models here.
+admin.site.register(Play, admin.ModelAdmin)
+
+Переходим http://127.0.0.1:8000/admin/
+
+Можно, конено, добавить спектакль в админке, но это неудобно потом отображается.
+Лучше зменить интерфейс храма.
+Под ккапотом ModelAdmin имеет list_display, который как раз и отображает страницу админки. По дефолту равно __str__.
+То есть мы делаем сына от модели админа и задаём ему параметры
+
+class PlayAdmin(admin.ModelAdmin):
+    list_display=('title',) j,zpfntkmyj обязательно должен быть либо кортежем, либо листом
+
+# Register your models here
+admin.site.register(Play, PlayAdmin)
+
+Хорошо, но нам же нужно когда-то показывать эту постановку, верно?
+
+class Show(models.Model):
+    start_at = models.DateTimeField()
+    play = models.ForeignKey(Play, on_delete=models.CASCADE) связка. При удалении удалится и значение в этой таблице.
+
+Можно поставить, чем будет заменена постановка: SET(<id>)
+Место забронировано, но спектакля не будет: SET_NULL
+
+А как же актёры?
+
+class Actor(models.Model):
+    name = models.CharField(max_length=255)
+    birthday = models.DateField(null=True) # maybe null
+
+    
+class Show(models.Model):
+    start_at = models.DateTimeField()
+    play = models.ForeignKey(Play, on_delete=models.CASCADE)
+    actors = models.ManyToManyField(Actor) # много показов могут ссылаться на одного актёра
+
+Мы зафиксировали миграцию с помощь makemigrations и теперь миграцию нужно выложить
+
+ТАк, мы добавили актёров и шоу в модели, но при создании постановки нельзя сразу занести дату шоу. Приходится возвращаться туда-сюда.
+Лучше завести графический индекс сразу в PlayAdmin
+
+class ShowAdminInline(admin.TabularInline):
+    model = Show
+    extra = 0 # чтобы мы могли занести только одну дату, а не несколько для одной постановки
+
+class PlayAdmin(admin.ModelAdmin):
+    list_display=('title',)
+    inlines = [ShowAdminInline]
+
+# Register your models here
+admin.site.register(Play, PlayAdmin)
+admin.site.register(Actor, admin.ModelAdmin)
+admin.site.register(Show, admin.ModelAdmin)
+
+Чёрт, шоу называется неудобно.
+
+Тогда в классе определим функцию play_name, которая вернёт название постановки и в админе пропишим ShowAdmin так же, как и для PlayAdmin
+
+class Show(models.Model):
+    start_at = models.DateTimeField()
+    play = models.ForeignKey(Play, on_delete=models.CASCADE)
+    actors = models.ManyToManyField(Actor) # много показов могут ссылаться на одного актёра
+
+    @display
+    def play_name(self):
+        return self.play.title
+
+А в админе определим ShowAdmin
+
+class ShowAdmin(admin.ModelAdmin):
+    list_display = ("play_name", "start_at",)
+
+
+# Register your models here
+admin.site.register(Play, PlayAdmin)
+admin.site.register(Actor, admin.ModelAdmin)
+admin.site.register(Show, ShowAdmin)
+
+С храмом мы закончили.
+
+
+
+
+
+
+
+
+
+
+
+
+Теперь нам нужно отобразить это всё для пользователей, верно? Нам же нужно, чтобы кто-то покупал билеты.
+
+Создадим homepage
+python3 manage.py startapp homepage
+
+Ещё создадим homepage.html в директирии шаблонов templates
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Театр N</title>
+</head>
+<body>
+    Hello, {{ request.user.usrename }}! он обращается к имени пользователя через запрос
+</body>
+</html>
+
+В моделях нами созданного homepage занесём функцию, которая будт возвращать название шаблона html (homepage.html), куда будет передавать запрос с данными, которые мы отобразим тамже.
+
+from django.template.response import TemplateResponse
+
+def homepage(request):
+    return TemplateResponse(request, 'homepage.html')
+
+Отлично! Теперь нам надо указать django, что есть ещё приложение, которое надо считывать. Для этого в INSTALLED_APPS пропишим наше приложение homepage:
+INSTALLED_APPS = [
+    'users',
+    'plays',
+    'homepage', ВОТ ОНО!!!!!!!!!!!!!
+    "admin_interface",
+    "colorfield",
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+
+Мы прописали TemplateResponse в функции homepage в моделях приложения homepage. Она передаёт запрос на шаблон homepage.html, только django пока не знает, где их искать.
+Пропишем в переменную TEMPLATES в сеттингсах диреторию, где будут храниться все шаблоны
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': ['templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+Отлично! Доступ через браузер мы ещё не имеем. Для этого в урлах приложения домашней страницы добавим:
+
+from django.urls import path
+from homepage.models import homepage
+
+urlpatterns = [
+    path('', homepage) то есть по такому пути будет отображаться эта функция
+]
+
+Что такое? Доступ мы ещё не получили, потому что в кор мы не занесли, что пути можно читать также из homepage.urls
+
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('', include('homepage.urls')),
+    path('admin/', admin.site.urls),
+]
+
+Вуаля! Наконец-то мы сделали отображение!
+
+А если пользователь не зареган? Тогда тут условие надо включить.
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Театр N</title>
+</head>
+<body>
+    {% if request.user.is_authenticated %}
+        Добро пожаловать, {{ request.user.username }}!
+    {% else %}
+        Добро пожаловать!
+    {% endif %}
+</body>
+</html>
+
+Вместо этого:
+
+from django.template.response import TemplateResponse
+
+def homepage(request):
+    return TemplateResponse(request, 'homepage.html')
+
+Можем прописать класс HomepageView
+
+class HomeView(TemplateView):
+    template_name = 'homepage.html'
+
+Только теперь вместо
+
+urlpatterns = [
+    path('', homepage) то есть по такому пути будет отображаться эта функция
+]
+
+Напишем
+
+urlpatterns = [
+    path('', HomepageView.as_view()) то есть по такому пути будет отображаться этот класс
+]
+
+
+
+Как работать с моделями?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
